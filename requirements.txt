@@ -4,4 +4,5 @@
 
 azure-functions
 requests
+pyjwt
 azure-storage-file-share==12.3.0

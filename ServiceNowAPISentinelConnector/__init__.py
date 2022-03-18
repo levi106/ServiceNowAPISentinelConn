@@ -1,3 +1,4 @@
+from http import client
 import json
 import datetime
 import base64
@@ -7,7 +8,12 @@ import os
 import logging
 import re
 import requests
+import secrets
+import time
+import jwt
 import azure.functions as func
+from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives.serialization import load_pem_private_key
 from .state_manager import StateManager
 
 customer_id = os.environ['WorkspaceID']
@@ -15,10 +21,18 @@ shared_key = os.environ['WorkspaceKey']
 logAnalyticsUri = os.environ.get('logAnalyticsUri')
 log_type = 'ServiceNow'
 servicenow_uri = os.environ['ServiceNowUri']
-servicenow_user = os.environ['ServiceNowUser']
-servicenow_password = os.environ['ServiceNowPassword']
+# servicenow_user = os.environ['ServiceNowUser']
+# servicenow_password = os.environ['ServiceNowPassword']
 offset_limit = 1000
 connection_string = os.environ['AzureWebJobsStorage']
+private_key = os.environ['ServiceNowPrivateKey']
+passphrase = os.environ['ServcieNowPassphrase']
+client_id = os.environ['ServiceNowClientID']
+client_secret = os.environ['ServiceNowClientSecret']
+jwt_subject = os.environ['ServiceNowSubClaim']
+jwt_keyid = os.environ['ServiceNowKeyID']
+jwt_algorithm = os.getenv('ServiceNowAlgorithm', 'RS256')
+authentication_url = os.environ['ServiceNowAuthenticationUrl']
 
 if ((logAnalyticsUri in (None, '') or str(logAnalyticsUri).isspace())):
     logAnalyticsUri = 'https://' + customer_id + '.ods.opinsights.azure.com'
@@ -80,16 +94,86 @@ def post_data(table_name, body):
 def get_basic_auth_header(user, password):
     return 'Basic ' + str(base64.b64encode((user + ':' + password).encode("utf-8")), "utf-8")
 
+
+def load_private_key():
+    key = load_pem_private_key(
+        data = private_key.encode('utf8'),
+        password = passphrase.encode('utf8'),
+        backend = default_backend()
+    )
+    return key
+
+def create_claims():
+    exp = round(time.time()) + 45
+    claims = {
+        'sub': jwt_subject,
+        'aud': client_id,
+        'iss': client_id,
+        'jti': secrets.token_hex(64),
+        'exp': exp
+    }
+    assertion = jwt.encode(claims,
+        private_key,
+        algorithm=jwt_algorithm,
+        headers = {
+            'kid': jwt_keyid
+        })
+
+    return assertion
+
+
+def get_access_token():
+    logging.info("Start requesting an access token.")
+    token = None
+    try:
+        assertion = create_claims()
+        # logging.info(assertion)
+
+        params = {
+            'client_id': client_id,
+            'client_secret': client_secret,
+            'grant_type': 'urn:ietf:params:oauth:grant-type:jwt-bearer',
+            'assertion': assertion
+        }
+        r = requests.post(authentication_url, params)
+        if r.status_code ==200:
+            if "access_token" in r.json():
+                # アプリケーション登録時に指定した Access Token Lifespan よりも
+                # 全てのデータ取得に時間がかかるようであれば、
+                # expires_in の値も取得してトークンが切れていないかの確認と
+                # 再取得の実装を検討する必要があります。
+                token = r.json()["access_token"]
+            else:
+                logging.info("Access token not found.")
+        else:
+            logging.error("Something wrong. Error code: {}".format(r.status_code))
+    except Exception as err:
+        logging.error("Something wrong. Exception error text: {}".format(err))
+    return token
+
+
+def get_oauth_header():
+    global token_cache
+    if token_cache == None:
+        token_cache = get_access_token()
+        if token_cache == None:
+            return None
+    # logging.info(token_cache)
+    return 'Bearer ' + token_cache
+
+
 def get_result_request(table_name, params):
     count = 0
     try:
         url = servicenow_uri + table_name
-        basic_auth_header = get_basic_auth_header(servicenow_user, servicenow_password)
-        # XXX これは Basic 認証の場合のコード
-        #     OAuth を使用する場合は、トークンを取得して Authorization ヘッダーに指定する処理を実装する必要あり
+        # basic_auth_header = get_basic_auth_header(servicenow_user, servicenow_password)
+        oauth_header = get_oauth_header()
+        if oauth_header == None:
+            logging.error("Failed to get OAuth token")
+            return 0
         r = requests.get(url=url,
                          headers={'Accept': 'application/json',
-                                  "Authorization": basic_auth_header
+                                  "Authorization": oauth_header
                                   },
                          params=params)
         if r.status_code == 200:
@@ -165,6 +249,8 @@ def main(mytimer: func.TimerRequest)  -> None:
     global global_element_count
     global_element_count = 0
     oldest, latest = generate_date()
+    global token_cache
+    token_cache = None
 
     # 取得する ServiceNow のテーブルが 3 つあるので、それぞれのテーブルに対して処理
     for table_name in ["sysevent", "syslog", "syslog_transaction"]:
