@@ -26,7 +26,7 @@ servicenow_uri = os.environ['ServiceNowUri']
 offset_limit = 1000
 connection_string = os.environ['AzureWebJobsStorage']
 private_key = os.environ['ServiceNowPrivateKey']
-passphrase = os.environ['ServcieNowPassphrase']
+passphrase = os.environ['ServiceNowPassphrase']
 client_id = os.environ['ServiceNowClientID']
 client_secret = os.environ['ServiceNowClientSecret']
 jwt_subject = os.environ['ServiceNowSubClaim']
@@ -113,7 +113,7 @@ def create_claims():
         'exp': exp
     }
     assertion = jwt.encode(claims,
-        private_key,
+        load_private_key(),
         algorithm=jwt_algorithm,
         headers = {
             'kid': jwt_keyid
