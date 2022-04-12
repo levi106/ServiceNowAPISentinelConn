@@ -18,20 +18,49 @@ from .state_manager import StateManager
 
 customer_id = os.environ['WorkspaceID']
 shared_key = os.environ['WorkspaceKey']
-logAnalyticsUri = os.environ.get('logAnalyticsUri')
+logAnalyticsUri = os.getenv('logAnalyticsUri')
 log_type = 'ServiceNow'
 servicenow_uri = os.environ['ServiceNowUri']
-# servicenow_user = os.environ['ServiceNowUser']
-# servicenow_password = os.environ['ServiceNowPassword']
 offset_limit = 1000
 connection_string = os.environ['AzureWebJobsStorage']
-private_key = os.environ['ServiceNowPrivateKey']
-passphrase = os.environ['ServiceNowPassphrase']
-client_id = os.environ['ServiceNowClientID']
-client_secret = os.environ['ServiceNowClientSecret']
-jwt_subject = os.environ['ServiceNowSubClaim']
-jwt_keyid = os.environ['ServiceNowKeyID']
+# 認証方式 (必須)
+# basic ... Basic 認証
+# jwt ... OAuth JWT API endpoint
+# password ... OAuth API endpoint (Resource owner password credentials)
+# refresh_token ... OAuth API endpoint (Refresh Token)
+auth_type = os.environ['ServiceNowAuthType']
+# 認証ユーザー名
+# basic, password で使用
+servicenow_user = os.getenv('ServiceNowUser')
+# 認証ユーザーパスワード
+# basic, password で使用
+servicenow_password = os.getenv('ServiceNowPassword')
+# 秘密鍵
+# jwt で使用
+private_key = os.getenv('ServiceNowPrivateKey')
+# 秘密鍵のパスフレーズ
+# jwt で使用
+passphrase = os.getenv('ServiceNowPassphrase')
+# JWT に含めるユーザー名
+# jwt で使用
+jwt_subject = os.getenv('ServiceNowSubClaim')
+# キー ID
+# jwt で使用
+jwt_keyid = os.getenv('ServiceNowKeyID')
+# ハッシュアルゴリズム
+# jwt で使用
 jwt_algorithm = os.getenv('ServiceNowAlgorithm', 'RS256')
+# リフレッシュトークン
+# refresh_token で使用
+refresh_token = os.getenv('ServiceNowRefreshToken')
+# Client ID
+# jwt, password, refresh_token で使用
+client_id = os.getenv('ServiceNowClientID')
+# Client Secret
+# jwt, password, refresh_token で使用
+client_secret = os.getenv('ServiceNowClientSecret')
+# 認証 URL
+# basic, jwt, password, refresh_token で使用
 authentication_url = os.environ['ServiceNowAuthenticationUrl']
 
 if ((logAnalyticsUri in (None, '') or str(logAnalyticsUri).isspace())):
@@ -126,15 +155,24 @@ def get_access_token():
     logging.info("Start requesting an access token.")
     token = None
     try:
-        assertion = create_claims()
-        # logging.info(assertion)
-
         params = {
             'client_id': client_id,
-            'client_secret': client_secret,
-            'grant_type': 'urn:ietf:params:oauth:grant-type:jwt-bearer',
-            'assertion': assertion
+            'client_secret': client_secret
         }
+
+        if auth_type == 'jwt':
+            assertion = create_claims()
+            # logging.info(assertion)
+            params['grant_type'] = 'urn:ietf:params:oauth:grant-type:jwt-bearer'
+            params['assertion'] = assertion
+        elif auth_type == 'password':
+            params['grant_type'] = 'password'
+            params['username'] = servicenow_user
+            params['password'] = servicenow_password
+        elif auth_type == 'refresh_token':
+            params['grant_type'] = 'refresh_token'
+            params['refresh_token'] = refresh_token
+
         r = requests.post(authentication_url, params)
         if r.status_code ==200:
             if "access_token" in r.json():
@@ -143,10 +181,12 @@ def get_access_token():
                 # expires_in の値も取得してトークンが切れていないかの確認と
                 # 再取得の実装を検討する必要があります。
                 token = r.json()["access_token"]
+                logging.info("Succeeded to get access token")
             else:
                 logging.info("Access token not found.")
         else:
             logging.error("Something wrong. Error code: {}".format(r.status_code))
+            logging.error("{}".format(r.content.decode('utf8')))
     except Exception as err:
         logging.error("Something wrong. Exception error text: {}".format(err))
     return token
@@ -165,15 +205,18 @@ def get_oauth_header():
 def get_result_request(table_name, params):
     count = 0
     try:
+        logging.info('Auth Type: {}'.format(auth_type))
         url = servicenow_uri + table_name
-        # basic_auth_header = get_basic_auth_header(servicenow_user, servicenow_password)
-        oauth_header = get_oauth_header()
-        if oauth_header == None:
-            logging.error("Failed to get OAuth token")
+        if auth_type == 'basic':
+            auth_header = get_basic_auth_header(servicenow_user, servicenow_password)
+        else:
+            auth_header = get_oauth_header()
+        if auth_header == None:
+            logging.error("Failed to get auth token")
             return 0
         r = requests.get(url=url,
                          headers={'Accept': 'application/json',
-                                  "Authorization": oauth_header
+                                  "Authorization": auth_header
                                   },
                          params=params)
         if r.status_code == 200:
