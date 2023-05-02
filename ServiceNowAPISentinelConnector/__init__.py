@@ -14,15 +14,31 @@ import jwt
 import azure.functions as func
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.serialization import load_pem_private_key
+from azure.identity import DefaultAzureCredential
+from azure.monitor.ingestion import LogsIngestionClient
+from azure.core.exceptions import HttpResponseError
 from .state_manager import StateManager
+from typing import Any, Tuple
 
-customer_id = os.environ['WorkspaceID']
-shared_key = os.environ['WorkspaceKey']
-logAnalyticsUri = os.getenv('logAnalyticsUri')
+
 log_type = 'ServiceNow'
-servicenow_uri = os.environ['ServiceNowUri']
 offset_limit = 1000
 connection_string = os.environ['AzureWebJobsStorage']
+
+########## LogAnalytics 設定 ##########
+# Ingestion endpoint of the Data Collection Endpoint object
+dce_endpoint = os.environ['DCEndpoint']
+# ImmutableId property of the Data Collection Rule
+dcr_immutableid = os.environ['DCRImmutableID']
+# インジェストを行う際の資格情報は azure.identity.DefaultAzureCredential によって取得されます
+# https://learn.microsoft.com/ja-jp/python/api/azure-identity/azure.identity.defaultazurecredential?view=azure-python
+# https://learn.microsoft.com/ja-jp/azure/developer/python/sdk/authentication-overview#use-defaultazurecredential-in-an-application
+# マネージド ID を使用する場合は特に設定は不要です
+# サービス プリンシパルを使用する場合は次のドキュメントに記載の環境変数の設定が必要です
+# https://learn.microsoft.com/ja-jp/python/api/azure-identity/azure.identity.environmentcredential?view=azure-python
+
+########## ServiceNow API 設定 ##########
+servicenow_uri = os.environ['ServiceNowUri']
 # 認証方式 (必須)
 # basic ... Basic 認証
 # jwt ... OAuth JWT API endpoint
@@ -63,16 +79,7 @@ client_secret = os.getenv('ServiceNowClientSecret')
 # basic, jwt, password, refresh_token で使用
 authentication_url = os.environ['ServiceNowAuthenticationUrl']
 
-if ((logAnalyticsUri in (None, '') or str(logAnalyticsUri).isspace())):
-    logAnalyticsUri = 'https://' + customer_id + '.ods.opinsights.azure.com'
-
-pattern = r"https:\/\/([\w\-]+)\.ods\.opinsights\.azure.([a-zA-Z\.]+)$"
-match = re.match(pattern,str(logAnalyticsUri))
-if(not match):
-    raise Exception("Invalid Log Analytics Uri.")
-
-
-def process_events(table_name, events_obj):
+def process_events(client: LogsIngestionClient, table_name: str, events_obj) -> None:
     # ServiceNow から取得したデータを加工して Log Analytics へ送信したい場合は、ここで変換を行う
     # 例: 全ての ServiceNow のテーブルを共通の Log Analytics のテーブルに格納する場合に、
     #     table_name のようなフィールドを追加する
@@ -81,50 +88,27 @@ def process_events(table_name, events_obj):
     element_count = len(events_obj)
     global global_element_count, oldest, latest
     if element_count > 0:
-        post_status_code = post_data(table_name, json.dumps(events_obj))
-        if post_status_code is not None:
+        result = post_data(client, table_name, json.dumps(events_obj))
+        if result:
             global_element_count = global_element_count + element_count
 
 
-def build_signature(customer_id, shared_key, date, content_length, method, content_type, resource):
-    x_headers = 'x-ms-date:' + date
-    string_to_hash = method + "\n" + str(content_length) + "\n" + content_type + "\n" + x_headers + "\n" + resource
-    bytes_to_hash = bytes(string_to_hash, encoding="utf-8")
-    decoded_key = base64.b64decode(shared_key)
-    encoded_hash = base64.b64encode(hmac.new(decoded_key, bytes_to_hash, digestmod=hashlib.sha256).digest()).decode()
-    authorization = "SharedKey {}:{}".format(customer_id,encoded_hash)
-    return authorization
-
-
 # Log Analytics ワークスペースへログを送信
-def post_data(table_name, body):
-    method = 'POST'
-    content_type = 'application/json'
-    resource = '/api/logs'
-    rfc1123date = datetime.datetime.utcnow().strftime('%a, %d %b %Y %H:%M:%S GMT')
-    content_length = len(body)
-    signature = build_signature(customer_id, shared_key, rfc1123date, content_length, method, content_type, resource)
-    uri = logAnalyticsUri + resource + '?api-version=2016-04-01'
-    # ServiceNow のテーブル毎に Log Analytics の異なるテーブルに格納したい場合は、
-    # log_type の値をテーブル毎に変更する必要あり
-    headers = {
-        'content-type': content_type,
-        'Authorization': signature,
-        'Log-Type': log_type + '_' + table_name, # この実装例では ServiceNow_<テーブル名> という名前の Log Analytics テーブルに格納しています
-        'x-ms-date': rfc1123date
-    }
-    response = requests.post(uri,data=body, headers=headers)
-    if (response.status_code >= 200 and response.status_code <= 299):
-        return response.status_code
-    else:
-        logging.warn("Events are not processed into Azure. Response code: {}".format(response.status_code))
-        return None
+def post_data(client: LogsIngestionClient, table_name: str, body: str) -> bool:
+    stream_name = "Custom-" + table_name
+    try:
+        client.upload(rule_id=dcr_immutableid, stream_name=stream_name, logs=body)
+        return True
+    except HttpResponseError as e:
+        logging.error(f"Upload failed: {e}")
+        return False
 
-def get_basic_auth_header(user, password):
+
+def get_basic_auth_header(user: str, password: str) -> str:
     return 'Basic ' + str(base64.b64encode((user + ':' + password).encode("utf-8")), "utf-8")
 
 
-def load_private_key():
+def load_private_key() -> Any:
     key = load_pem_private_key(
         data = private_key.encode('utf8'),
         password = passphrase.encode('utf8'),
@@ -132,7 +116,8 @@ def load_private_key():
     )
     return key
 
-def create_claims():
+
+def create_claims() -> str:
     exp = round(time.time()) + 45
     claims = {
         'sub': jwt_subject,
@@ -151,7 +136,7 @@ def create_claims():
     return assertion
 
 
-def get_access_token():
+def get_access_token() -> str:
     logging.info("Start requesting an access token.")
     token = None
     try:
@@ -189,10 +174,11 @@ def get_access_token():
             logging.error("{}".format(r.content.decode('utf8')))
     except Exception as err:
         logging.error("Something wrong. Exception error text: {}".format(err))
+        raise
     return token
 
 
-def get_oauth_header():
+def get_oauth_header() -> str:
     global token_cache
     if token_cache == None:
         token_cache = get_access_token()
@@ -202,7 +188,7 @@ def get_oauth_header():
     return 'Bearer ' + token_cache
 
 
-def get_result_request(table_name, params):
+def get_result_request(client: LogsIngestionClient, table_name: str, params: Any) -> int:
     count = 0
     try:
         logging.info('Auth Type: {}'.format(auth_type))
@@ -225,7 +211,7 @@ def get_result_request(table_name, params):
                 count = len(result)
                 if count > 0:
                     logging.info("Processing {} events".format(count))
-                    process_events(table_name, result)
+                    process_events(client, table_name, result)
             else:
                 logging.info("There are no entries from the output.")
         elif r.status_code == 401:
@@ -236,15 +222,17 @@ def get_result_request(table_name, params):
             logging.error("Something wrong. Error code: {}".format(r.status_code))
     except Exception as err:
         logging.error("Something wrong. Exception error text: {}".format(err))
+        raise
     return count
 
 
-def generate_query(oldest, latest):
+def generate_query(oldest: str, latest: str) -> str:
     strOldest = datetime.datetime.fromtimestamp(int(oldest)).strftime("%Y-%m-%d %H:%M:%S")
     strLatest = datetime.datetime.fromtimestamp(int(latest)).strftime("%Y-%m-%d %H:%M:%S")
     return 'sys_created_onBETWEEN{}@{}'.format(strOldest, strLatest)
 
-def process_table(table_name, oldest, latest):
+
+def process_table(client: LogsIngestionClient, table_name: str, oldest: str, latest: str) -> None:
     logging.info("Start processing events to Azure Sentinel. Table: {}, Time period: from {} to {}.".format(table_name, datetime.datetime.fromtimestamp(int(oldest)).strftime("%Y-%m-%dT%H:%M:%SZ"),
                                                                                       datetime.datetime.fromtimestamp(int(latest)).strftime("%Y-%m-%dT%H:%M:%SZ")))
 
@@ -259,7 +247,7 @@ def process_table(table_name, oldest, latest):
             "sysparm_offset": offset,
             "sysparm_query": query  # 取得するデータの時間範囲を指定
         }
-        count = get_result_request(table_name, params)
+        count = get_result_request(client, table_name, params)
         # エラー発生時や全件取得した時には 0 が返るのでループを抜ける
         offset += offset_limit
         # break # 動作検証のために、1 回だけ (offset_limit 件だけ) データを取得する場合はここで break
@@ -268,7 +256,7 @@ def process_table(table_name, oldest, latest):
                                                                                       datetime.datetime.fromtimestamp(int(latest)).strftime("%Y-%m-%dT%H:%M:%SZ")))
 
 # これはいつからいつまでのデータを取得するか指定するための、開始時刻、終了時刻を返す関数です
-def generate_date():
+def generate_date() -> Tuple[str, str]:
     # 現在時刻
     current_time = datetime.datetime.utcnow().replace(second=0, microsecond=0) - datetime.timedelta(minutes=10)
     # ストレージ アカウントに保存された前回実行時の現在時刻を取得
@@ -294,7 +282,9 @@ def main(mytimer: func.TimerRequest)  -> None:
     oldest, latest = generate_date()
     global token_cache
     token_cache = None
+    credential = DefaultAzureCredential()
+    client = LogsIngestionClient(endpoint=dce_endpoint, credential=credential, logging_enable=True)
 
     # 取得する ServiceNow のテーブルが 3 つあるので、それぞれのテーブルに対して処理
     for table_name in ["sysevent", "syslog", "syslog_transaction"]:
-        process_table(table_name, oldest, latest)
+        process_table(client, table_name, oldest, latest)
