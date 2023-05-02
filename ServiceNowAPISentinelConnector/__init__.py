@@ -18,7 +18,7 @@ from azure.identity import DefaultAzureCredential
 from azure.monitor.ingestion import LogsIngestionClient
 from azure.core.exceptions import HttpResponseError
 from .state_manager import StateManager
-from typing import Any, Tuple
+from typing import Any, Tuple, List
 
 
 log_type = 'ServiceNow'
@@ -79,7 +79,7 @@ client_secret = os.getenv('ServiceNowClientSecret')
 # basic, jwt, password, refresh_token で使用
 authentication_url = os.environ['ServiceNowAuthenticationUrl']
 
-def process_events(client: LogsIngestionClient, table_name: str, events_obj) -> None:
+def process_events(client: LogsIngestionClient, table_name: str, events_obj: List[Any]) -> None:
     # ServiceNow から取得したデータを加工して Log Analytics へ送信したい場合は、ここで変換を行う
     # 例: 全ての ServiceNow のテーブルを共通の Log Analytics のテーブルに格納する場合に、
     #     table_name のようなフィールドを追加する
@@ -88,13 +88,13 @@ def process_events(client: LogsIngestionClient, table_name: str, events_obj) -> 
     element_count = len(events_obj)
     global global_element_count, oldest, latest
     if element_count > 0:
-        result = post_data(client, table_name, json.dumps(events_obj))
+        result = post_data(client, table_name, events_obj)
         if result:
             global_element_count = global_element_count + element_count
 
 
 # Log Analytics ワークスペースへログを送信
-def post_data(client: LogsIngestionClient, table_name: str, body: str) -> bool:
+def post_data(client: LogsIngestionClient, table_name: str, body: List[Any]) -> bool:
     stream_name = "Custom-" + table_name
     try:
         client.upload(rule_id=dcr_immutableid, stream_name=stream_name, logs=body)
