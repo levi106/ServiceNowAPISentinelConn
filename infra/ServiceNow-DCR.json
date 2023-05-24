@@ -1,0 +1,444 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "dataCollectionRuleName": {
+            "type": "String",
+            "metadata": {
+                "description": "Specifies the name of the Data Collection Rule to create."
+            }
+        },
+        "location": {
+            "defaultValue": "japaneast",
+            "type": "String",
+            "metadata": {
+                "description": "Specifies the location in which to create the Data Collection Rule."
+            }
+        },
+        "workspaceResourceId": {
+            "type": "String",
+            "metadata": {
+                "description": "Specifies the Azure resource ID of the Log Analytics workspace to use."
+            }
+        },
+        "workspaceName": {
+            "type": "String",
+            "metadata": {
+                "description": "Specifies the name of the Log Analytics workspace to use."
+            }
+        },
+        "endpointResourceId": {
+            "type": "String",
+            "metadata": {
+                "description": "Specifies the Azure resource ID of the Data Collection Endpoint to use."
+            }
+        }
+    },
+    "resources": [
+        {
+            "type": "Microsoft.Insights/dataCollectionRules",
+            "apiVersion": "2021-09-01-preview",
+            "name": "[parameters('dataCollectionRuleName')]",
+            "location": "[parameters('location')]",
+            "properties": {
+                "dataCollectionEndpointId": "[parameters('endpointResourceId')]",
+                "streamDeclarations": {
+                    "Custom-syslog_transaction": {
+                        "columns": [
+                            {
+                                "name": "business_rule_count",
+                                "type": "string"
+                            },
+                            {
+                                "name": "type",
+                                "type": "string"
+                            },
+                            {
+                                "name": "protocol",
+                                "type": "string"
+                            },
+                            {
+                                "name": "remote_ip",
+                                "type": "string"
+                            },
+                            {
+                                "name": "ui_policy_time",
+                                "type": "string"
+                            },
+                            {
+                                "name": "origin_scope",
+                                "type": "string"
+                            },
+                            {
+                                "name": "sys_created_on",
+                                "type": "string"
+                            },
+                            {
+                                "name": "sql_time",
+                                "type": "string"
+                            },
+                            {
+                                "name": "potential_cpu_time",
+                                "type": "string"
+                            },
+                            {
+                                "name": "sys_created_by",
+                                "type": "string"
+                            },
+                            {
+                                "name": "db_pool",
+                                "type": "string"
+                            },
+                            {
+                                "name": "session_wait_time",
+                                "type": "string"
+                            },
+                            {
+                                "name": "total_page_load_time",
+                                "type": "string"
+                            },
+                            {
+                                "name": "largest_input_read",
+                                "type": "string"
+                            },
+                            {
+                                "name": "clotho_time",
+                                "type": "string"
+                            },
+                            {
+                                "name": "cpu_usage",
+                                "type": "string"
+                            },
+                            {
+                                "name": "client_response_time",
+                                "type": "string"
+                            },
+                            {
+                                "name": "semaphore_wait_time",
+                                "type": "string"
+                            },
+                            {
+                                "name": "transaction_pattern",
+                                "type": "string"
+                            },
+                            {
+                                "name": "request_param_size",
+                                "type": "string"
+                            },
+                            {
+                                "name": "db_category",
+                                "type": "string"
+                            },
+                            {
+                                "name": "session",
+                                "type": "string"
+                            },
+                            {
+                                "name": "sys_id",
+                                "type": "string"
+                            },
+                            {
+                                "name": "client_network_time",
+                                "type": "string"
+                            },
+                            {
+                                "name": "sql_count",
+                                "type": "string"
+                            },
+                            {
+                                "name": "client_transaction",
+                                "type": "string"
+                            },
+                            {
+                                "name": "start_process_at",
+                                "type": "string"
+                            },
+                            {
+                                "name": "table",
+                                "type": "string"
+                            },
+                            {
+                                "name": "user_agent",
+                                "type": "string"
+                            },
+                            {
+                                "name": "cpu_time",
+                                "type": "string"
+                            },
+                            {
+                                "name": "phase1_form_length",
+                                "type": "string"
+                            },
+                            {
+                                "name": "business_rule_time",
+                                "type": "string"
+                            },
+                            {
+                                "name": "system_id",
+                                "type": "string"
+                            },
+                            {
+                                "name": "view_id",
+                                "type": "string"
+                            },
+                            {
+                                "name": "client_script_time",
+                                "type": "string"
+                            },
+                            {
+                                "name": "network_time",
+                                "type": "string"
+                            },
+                            {
+                                "name": "total_wait_time",
+                                "type": "string"
+                            },
+                            {
+                                "name": "gzip",
+                                "type": "string"
+                            },
+                            {
+                                "name": "interaction_id",
+                                "type": "string"
+                            },
+                            {
+                                "name": "url",
+                                "type": "string"
+                            },
+                            {
+                                "name": "browser_time",
+                                "type": "string"
+                            },
+                            {
+                                "name": "largest_chunk_written",
+                                "type": "string"
+                            },
+                            {
+                                "name": "output_length",
+                                "type": "string"
+                            },
+                            {
+                                "name": "acl_time",
+                                "type": "string"
+                            },
+                            {
+                                "name": "ajax_transaction_count",
+                                "type": "string"
+                            },
+                            {
+                                "name": "render_size",
+                                "type": "string"
+                            },
+                            {
+                                "name": "transaction_number",
+                                "type": "string"
+                            },
+                            {
+                                "name": "has_call_chain",
+                                "type": "string"
+                            },
+                            {
+                                "name": "response_time",
+                                "type": "string"
+                            },
+                            {
+                                "name": "transaction_processing_time",
+                                "type": "string"
+                            },
+                            {
+                                "name": "app_scope",
+                                "type": "string"
+                            },
+                            {
+                                "name": "clotho_count",
+                                "type": "string"
+                            }
+                        ]
+                    },
+                    "Custom-sysevent": {
+                        "columns": [
+                            {
+                                "name": "instance",
+                                "type": "string"
+                            },
+                            {
+                                "name": "process_on",
+                                "type": "string"
+                            },
+                            {
+                                "name": "user_name",
+                                "type": "string"
+                            },
+                            {
+                                "name": "sys_mod_count",
+                                "type": "string"
+                            },
+                            {
+                                "name": "sys_updated_on",
+                                "type": "string"
+                            },
+                            {
+                                "name": "uri",
+                                "type": "string"
+                            },
+                            {
+                                "name": "processed",
+                                "type": "string"
+                            },
+                            {
+                                "name": "rollback_context_id",
+                                "type": "string"
+                            },
+                            {
+                                "name": "sys_id",
+                                "type": "string"
+                            },
+                            {
+                                "name": "sys_updated_by",
+                                "type": "string"
+                            },
+                            {
+                                "name": "user_id",
+                                "type": "string"
+                            },
+                            {
+                                "name": "sys_created_on",
+                                "type": "string"
+                            },
+                            {
+                                "name": "processing_duration",
+                                "type": "string"
+                            },
+                            {
+                                "name": "name",
+                                "type": "string"
+                            },
+                            {
+                                "name": "descriptive_name",
+                                "type": "string"
+                            },
+                            {
+                                "name": "state",
+                                "type": "string"
+                            },
+                            {
+                                "name": "parm1",
+                                "type": "string"
+                            },
+                            {
+                                "name": "parm2",
+                                "type": "string"
+                            },
+                            {
+                                "name": "queue",
+                                "type": "string"
+                            },
+                            {
+                                "name": "sys_created_by",
+                                "type": "string"
+                            },
+                            {
+                                "name": "table",
+                                "type": "string"
+                            },
+                            {
+                                "name": "claimed_by",
+                                "type": "string"
+                            }
+                        ]
+                    },
+                    "Custom-syslog": {
+                        "columns": [
+                            {
+                                "name": "sys_id",
+                                "type": "string"
+                            },
+                            {
+                                "name": "source_application_family",
+                                "type": "string"
+                            },
+                            {
+                                "name": "level",
+                                "type": "string"
+                            },
+                            {
+                                "name": "source_package",
+                                "type": "string"
+                            },
+                            {
+                                "name": "sys_created_on",
+                                "type": "string"
+                            },
+                            {
+                                "name": "source",
+                                "type": "string"
+                            },
+                            {
+                                "name": "message",
+                                "type": "string"
+                            },
+                            {
+                                "name": "sys_class_name",
+                                "type": "string"
+                            },
+                            {
+                                "name": "sys_created_by",
+                                "type": "string"
+                            },
+                            {
+                                "name": "context_map",
+                                "type": "string"
+                            }
+                        ]
+                    }
+                },
+                "destinations": {
+                    "logAnalytics": [
+                        {
+                            "workspaceResourceId": "[parameters('workspaceResourceId')]",
+                            "name": "[parameters('workspaceName')]"
+                        }
+                    ]
+                },
+                "dataFlows": [
+                    {
+                        "streams": [
+                            "Custom-syslog_transaction"
+                        ],
+                        "destinations": [
+                            "[parameters('workspaceName')]"
+                        ],
+                        "transformKql": "source | extend origin_scope_j = parse_json(origin_scope) | extend transaction_pattern_j = parse_json(transaction_pattern) | project TimeGenerated = todatetime(sys_created_on), business_rule_count_s = business_rule_count, type_s = type, protocol_s = protocol, remote_ip_s = remote_ip, ui_policy_time_s = ui_policy_time, origin_scope_link_s = tostring(origin_scope_j.link), origin_scope_value_s = tostring(origin_scope_j.value), sys_created_on_s = sys_created_on, sql_time_s = sql_time, potential_cpu_time_s = potential_cpu_time, sys_created_by_s = sys_created_by, db_pool_s = db_pool, session_wait_time_s = session_wait_time, total_page_load_time_s = total_page_load_time, largest_input_read_s = largest_input_read, clotho_time_s = clotho_time, cpu_usage_s = cpu_usage, client_response_time_s = client_response_time, semaphore_wait_time_s = semaphore_wait_time, transaction_pattern_link_s = tostring(transaction_pattern_j.link), transaction_pattern_value_s = tostring(transaction_pattern_j.value), request_param_size_s = request_param_size, db_category_s = db_category, session_s = session, sys_id_g = toguid(sys_id), client_network_time_s = client_network_time, sql_count_s = sql_count, client_transaction_s = client_transaction, start_process_at_s = start_process_at, table_s = table, user_agent_s = user_agent, cpu_time_s = cpu_time, phase1_form_length_s = phase1_form_length, business_rule_time_s = business_rule_time, system_id_s = system_id, view_id_s = view_id, client_script_time_s = client_script_time, network_time_s = network_time, total_wait_time_s = total_wait_time, gzip_s = gzip, interaction_id_s = interaction_id, url_s = url, browser_time_s = browser_time, largest_chunk_written_s = largest_chunk_written, output_length_s = output_length, acl_time_s = acl_time, ajax_transaction_count_s = ajax_transaction_count, render_size_s = render_size, transaction_number_s = transaction_number, has_call_chain_s = has_call_chain, response_time_s = response_time, transaction_processing_time_s = transaction_processing_time, app_scope_s = app_scope, clotho_count_s = clotho_count",
+                        "outputStream": "Custom-ServiceNow_syslog_transaction_CL"
+                    },
+                    {
+                        "streams": [
+                            "Custom-sysevent"
+                        ],
+                        "destinations": [
+                            "[parameters('workspaceName')]"
+                        ],
+                        "transformKql": "source | project TimeGenerated = todatetime(sys_created_on), instance_s = instance, process_on_s = process_on, user_name_s = user_name, sys_mod_count_s = sys_mod_count, sys_updated_on_s = sys_updated_on, uri_s = uri, processed_s = processed, rollback_context_id_s = rollback_context_id, sys_id_g = toguid(sys_id), sys_updated_by_s = sys_updated_by, user_id_g = toguid(user_id), sys_created_on_s = sys_created_on, processing_duration_s = processing_duration, name_s = name, descriptive_name_s = descriptive_name, state_s = state, parm1_s = parm1, parm2_s = parm2, queue_s = queue, sys_created_by_s = sys_created_by, table_s = table, claimed_by_s = claimed_by",
+                        "outputStream": "Custom-ServiceNow_sysevent_CL"
+                    },
+                    {
+                        "streams": [
+                            "Custom-syslog"
+                        ],
+                        "destinations": [
+                            "[parameters('workspaceName')]"
+                        ],
+                        "transformKql": "source | project TimeGenerated = todatetime(sys_created_on), sys_id_g = toguid(sys_id), source_application_family_s = source_application_family, Level = level, source_package_s = source_package, sys_created_on_s = sys_created_on, source_s = source, Message = message, sys_class_name_s = sys_class_name, sys_created_by_s = sys_created_by, context_map_s = context_map",
+                        "outputStream": "Custom-ServiceNow_syslog_CL"
+                    }
+                ]
+            }
+        }
+    ],
+    "outputs": {
+        "dataCollectionRuleId": {
+            "type": "String",
+            "value": "[resourceId('Microsoft.Insights/dataCollectionRules', parameters('dataCollectionRuleName'))]"
+        }
+    }
+}

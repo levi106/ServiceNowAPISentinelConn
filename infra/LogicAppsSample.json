@@ -1,0 +1,552 @@
+{
+    "definition": {
+        "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+        "actions": {
+            "Get_ServiceNow_Log": {
+                "inputs": {
+                    "authentication": {
+                        "password": "@variables('ServiceNowPassword')",
+                        "type": "Basic",
+                        "username": "@variables('ServiceNowUser')"
+                    },
+                    "method": "GET",
+                    "queries": {
+                        "sysparm_limit": "@{variables('ServiceNow_sysparam_limit')}"
+                    },
+                    "uri": "@variables('ServiceNowURL')"
+                },
+                "runAfter": {
+                    "Set_DCR_StreamName": [
+                        "Succeeded"
+                    ]
+                },
+                "type": "Http"
+            },
+            "ServiceNow_Log_の取得に成功した？": {
+                "actions": {
+                    "Authentication_Token_の取得に成功した？": {
+                        "actions": {
+                            "Authentication_Token_の解析": {
+                                "inputs": {
+                                    "content": "@body('Get_Authentication_Token')",
+                                    "schema": {
+                                        "properties": {
+                                            "access_token": {
+                                                "type": "string"
+                                            },
+                                            "expires_in": {
+                                                "type": "integer"
+                                            },
+                                            "ext_expires_in": {
+                                                "type": "integer"
+                                            },
+                                            "token_type": {
+                                                "type": "string"
+                                            }
+                                        },
+                                        "type": "object"
+                                    }
+                                },
+                                "runAfter": {},
+                                "type": "ParseJson"
+                            },
+                            "Send_the_data_to_the_Log_Analytics_Workspace": {
+                                "inputs": {
+                                    "body": "@body('Parse_ServiceNow_Logs')?['result']",
+                                    "headers": {
+                                        "Authorization": "Bearer @{body('Authentication_Token_の解析')?['access_token']}",
+                                        "Content-Type": "application/json"
+                                    },
+                                    "method": "POST",
+                                    "queries": {
+                                        "api-version": "2021-11-01-preview"
+                                    },
+                                    "uri": "@{variables('DceEndpoint')}/dataCollectionRules/@{variables('DcrImmutableId')}/streams/@{variables('StreamName')}"
+                                },
+                                "runAfter": {
+                                    "Authentication_Token_の解析": [
+                                        "Succeeded"
+                                    ]
+                                },
+                                "type": "Http"
+                            }
+                        },
+                        "expression": {
+                            "and": [
+                                {
+                                    "equals": [
+                                        "@outputs('Get_Authentication_Token')['statusCode']",
+                                        200
+                                    ]
+                                }
+                            ]
+                        },
+                        "runAfter": {
+                            "Get_Authentication_Token": [
+                                "Succeeded"
+                            ]
+                        },
+                        "type": "If"
+                    },
+                    "Get_Authentication_Token": {
+                        "inputs": {
+                            "body": "client_id=@{variables('ClientId')}&scope=https%3A%2F%2Fmonitor.azure.com%2F.default&client_secret=@{variables('ClientSecret')}&grant_type=client_credentials",
+                            "headers": {
+                                "Content-Type": "application/x-www-form-urlencoded"
+                            },
+                            "method": "POST",
+                            "uri": "https://login.microsoftonline.com/@{variables('TenantId')}/oauth2/v2.0/token"
+                        },
+                        "runAfter": {
+                            "Parse_ServiceNow_Logs": [
+                                "Succeeded"
+                            ]
+                        },
+                        "type": "Http"
+                    },
+                    "Parse_ServiceNow_Logs": {
+                        "inputs": {
+                            "content": "@body('Get_ServiceNow_Log')",
+                            "schema": {
+                                "properties": {
+                                    "result": {
+                                        "items": {
+                                            "properties": {
+                                                "acl_time": {
+                                                    "type": "string"
+                                                },
+                                                "ajax_transaction_count": {
+                                                    "type": "string"
+                                                },
+                                                "app_scope": {
+                                                    "type": "string"
+                                                },
+                                                "browser_time": {
+                                                    "type": "string"
+                                                },
+                                                "business_rule_count": {
+                                                    "type": "string"
+                                                },
+                                                "business_rule_time": {
+                                                    "type": "string"
+                                                },
+                                                "client_network_time": {
+                                                    "type": "string"
+                                                },
+                                                "client_response_time": {
+                                                    "type": "string"
+                                                },
+                                                "client_script_time": {
+                                                    "type": "string"
+                                                },
+                                                "client_transaction": {
+                                                    "type": "string"
+                                                },
+                                                "clotho_count": {
+                                                    "type": "string"
+                                                },
+                                                "clotho_time": {
+                                                    "type": "string"
+                                                },
+                                                "cpu_time": {
+                                                    "type": "string"
+                                                },
+                                                "cpu_usage": {
+                                                    "type": "string"
+                                                },
+                                                "db_category": {
+                                                    "type": "string"
+                                                },
+                                                "db_pool": {
+                                                    "type": "string"
+                                                },
+                                                "gzip": {
+                                                    "type": "string"
+                                                },
+                                                "has_call_chain": {
+                                                    "type": "string"
+                                                },
+                                                "interaction_id": {
+                                                    "type": "string"
+                                                },
+                                                "largest_chunk_written": {
+                                                    "type": "string"
+                                                },
+                                                "largest_input_read": {
+                                                    "type": "string"
+                                                },
+                                                "network_time": {
+                                                    "type": "string"
+                                                },
+                                                "origin_scope": {
+                                                    "properties": {
+                                                        "link": {
+                                                            "type": "string"
+                                                        },
+                                                        "value": {
+                                                            "type": "string"
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                },
+                                                "output_length": {
+                                                    "type": "string"
+                                                },
+                                                "phase1_form_length": {
+                                                    "type": "string"
+                                                },
+                                                "potential_cpu_time": {
+                                                    "type": "string"
+                                                },
+                                                "protocol": {
+                                                    "type": "string"
+                                                },
+                                                "remote_ip": {
+                                                    "type": "string"
+                                                },
+                                                "render_size": {
+                                                    "type": "string"
+                                                },
+                                                "request_param_size": {
+                                                    "type": "string"
+                                                },
+                                                "response_time": {
+                                                    "type": "string"
+                                                },
+                                                "semaphore_wait_time": {
+                                                    "type": "string"
+                                                },
+                                                "session": {
+                                                    "type": "string"
+                                                },
+                                                "session_wait_time": {
+                                                    "type": "string"
+                                                },
+                                                "sql_count": {
+                                                    "type": "string"
+                                                },
+                                                "sql_time": {
+                                                    "type": "string"
+                                                },
+                                                "start_process_at": {
+                                                    "type": "string"
+                                                },
+                                                "sys_created_by": {
+                                                    "type": "string"
+                                                },
+                                                "sys_created_on": {
+                                                    "type": "string"
+                                                },
+                                                "sys_id": {
+                                                    "type": "string"
+                                                },
+                                                "system_id": {
+                                                    "type": "string"
+                                                },
+                                                "table": {
+                                                    "type": "string"
+                                                },
+                                                "total_page_load_time": {
+                                                    "type": "string"
+                                                },
+                                                "total_wait_time": {
+                                                    "type": "string"
+                                                },
+                                                "transaction_number": {
+                                                    "type": "string"
+                                                },
+                                                "transaction_pattern": {
+                                                    "properties": {
+                                                        "link": {
+                                                            "type": "string"
+                                                        },
+                                                        "value": {
+                                                            "type": "string"
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                },
+                                                "transaction_processing_time": {
+                                                    "type": "string"
+                                                },
+                                                "type": {
+                                                    "type": "string"
+                                                },
+                                                "ui_policy_time": {
+                                                    "type": "string"
+                                                },
+                                                "url": {
+                                                    "type": "string"
+                                                },
+                                                "user_agent": {
+                                                    "type": "string"
+                                                },
+                                                "view_id": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "business_rule_count",
+                                                "type",
+                                                "protocol",
+                                                "remote_ip",
+                                                "ui_policy_time",
+                                                "origin_scope",
+                                                "sys_created_on",
+                                                "sql_time",
+                                                "potential_cpu_time",
+                                                "sys_created_by",
+                                                "db_pool",
+                                                "session_wait_time",
+                                                "total_page_load_time",
+                                                "largest_input_read",
+                                                "clotho_time",
+                                                "cpu_usage",
+                                                "client_response_time",
+                                                "semaphore_wait_time",
+                                                "transaction_pattern",
+                                                "request_param_size",
+                                                "db_category",
+                                                "session",
+                                                "sys_id",
+                                                "client_network_time",
+                                                "sql_count",
+                                                "client_transaction",
+                                                "start_process_at",
+                                                "table",
+                                                "user_agent",
+                                                "cpu_time",
+                                                "phase1_form_length",
+                                                "business_rule_time",
+                                                "system_id",
+                                                "view_id",
+                                                "client_script_time",
+                                                "network_time",
+                                                "total_wait_time",
+                                                "gzip",
+                                                "interaction_id",
+                                                "url",
+                                                "browser_time",
+                                                "largest_chunk_written",
+                                                "output_length",
+                                                "acl_time",
+                                                "ajax_transaction_count",
+                                                "render_size",
+                                                "transaction_number",
+                                                "has_call_chain",
+                                                "response_time",
+                                                "transaction_processing_time",
+                                                "app_scope",
+                                                "clotho_count"
+                                            ],
+                                            "type": "object"
+                                        },
+                                        "type": "array"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        },
+                        "runAfter": {},
+                        "type": "ParseJson"
+                    }
+                },
+                "expression": {
+                    "and": [
+                        {
+                            "equals": [
+                                "@outputs('Get_ServiceNow_Log')['statusCode']",
+                                200
+                            ]
+                        }
+                    ]
+                },
+                "runAfter": {
+                    "Get_ServiceNow_Log": [
+                        "Succeeded"
+                    ]
+                },
+                "type": "If"
+            },
+            "Set_ClientId": {
+                "inputs": {
+                    "variables": [
+                        {
+                            "name": "ClientId",
+                            "type": "string",
+                            "value": "<ClientId>"
+                        }
+                    ]
+                },
+                "runAfter": {
+                    "Set_TenantId": [
+                        "Succeeded"
+                    ]
+                },
+                "type": "InitializeVariable"
+            },
+            "Set_DCE_Endpoint": {
+                "inputs": {
+                    "variables": [
+                        {
+                            "name": "DceEndpoint",
+                            "type": "string",
+                            "value": "https://<DCE Endpoint>.japaneast-1.ingest.monitor.azure.com"
+                        }
+                    ]
+                },
+                "runAfter": {
+                    "Set_Secret": [
+                        "Succeeded"
+                    ]
+                },
+                "type": "InitializeVariable"
+            },
+            "Set_DCR_Immutable_Id": {
+                "inputs": {
+                    "variables": [
+                        {
+                            "name": "DcrImmutableId",
+                            "type": "string",
+                            "value": "<DCR ImmutableId>"
+                        }
+                    ]
+                },
+                "runAfter": {
+                    "Set_DCE_Endpoint": [
+                        "Succeeded"
+                    ]
+                },
+                "type": "InitializeVariable"
+            },
+            "Set_DCR_StreamName": {
+                "inputs": {
+                    "variables": [
+                        {
+                            "name": "StreamName",
+                            "type": "string",
+                            "value": "Custom-syslog_transaction"
+                        }
+                    ]
+                },
+                "runAfter": {
+                    "Set_DCR_Immutable_Id": [
+                        "Succeeded"
+                    ]
+                },
+                "type": "InitializeVariable"
+            },
+            "Set_Secret": {
+                "inputs": {
+                    "variables": [
+                        {
+                            "name": "ClientSecret",
+                            "type": "string",
+                            "value": "<ClientSecret>"
+                        }
+                    ]
+                },
+                "runAfter": {
+                    "Set_ClientId": [
+                        "Succeeded"
+                    ]
+                },
+                "type": "InitializeVariable"
+            },
+            "Set_ServiceNow_Limit": {
+                "inputs": {
+                    "variables": [
+                        {
+                            "name": "ServiceNow_sysparam_limit",
+                            "type": "integer",
+                            "value": 5
+                        }
+                    ]
+                },
+                "runAfter": {
+                    "Set_ServiceNow_URL": [
+                        "Succeeded"
+                    ]
+                },
+                "type": "InitializeVariable"
+            },
+            "Set_ServiceNow_Password": {
+                "inputs": {
+                    "variables": [
+                        {
+                            "name": "ServiceNowPassword",
+                            "type": "string",
+                            "value": "<ServiceNow のユーザー パスワード>"
+                        }
+                    ]
+                },
+                "runAfter": {
+                    "Set_ServiceNow_Username": [
+                        "Succeeded"
+                    ]
+                },
+                "type": "InitializeVariable"
+            },
+            "Set_ServiceNow_URL": {
+                "inputs": {
+                    "variables": [
+                        {
+                            "name": "ServiceNowURL",
+                            "type": "string",
+                            "value": "https://<インスタンス名>.service-now.com/api/now/table/syslog_transaction"
+                        }
+                    ]
+                },
+                "runAfter": {},
+                "type": "InitializeVariable"
+            },
+            "Set_ServiceNow_Username": {
+                "inputs": {
+                    "variables": [
+                        {
+                            "name": "ServiceNowUser",
+                            "type": "string",
+                            "value": "<ServiceNow のユーザー名>"
+                        }
+                    ]
+                },
+                "runAfter": {
+                    "Set_ServiceNow_Limit": [
+                        "Succeeded"
+                    ]
+                },
+                "type": "InitializeVariable"
+            },
+            "Set_TenantId": {
+                "inputs": {
+                    "variables": [
+                        {
+                            "name": "TenantId",
+                            "type": "string",
+                            "value": "<テナントID>"
+                        }
+                    ]
+                },
+                "runAfter": {
+                    "Set_ServiceNow_Password": [
+                        "Succeeded"
+                    ]
+                },
+                "type": "InitializeVariable"
+            }
+        },
+        "contentVersion": "1.0.0.0",
+        "outputs": {},
+        "parameters": {},
+        "triggers": {
+            "manual": {
+                "inputs": {
+                    "schema": {}
+                },
+                "kind": "Http",
+                "type": "Request"
+            }
+        }
+    },
+    "parameters": {}
+}

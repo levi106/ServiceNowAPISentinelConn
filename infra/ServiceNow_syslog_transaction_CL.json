@@ -1,0 +1,229 @@
+{
+    "properties": {
+        "schema": {
+            "name": "ServiceNow_syslog_transaction_CL",
+            "columns": [
+                {
+                    "name": "TimeGenerated",
+                    "type": "datetime"  
+                },
+                {
+                    "name": "business_rule_count_s",
+                    "type": "string"
+                },
+                {
+                    "name": "type_s",
+                    "type": "string"
+                },
+                {
+                    "name": "protocol_s",
+                    "type": "string"
+                },
+                {
+                    "name": "remote_ip_s",
+                    "type": "string"
+                },
+                {
+                    "name": "ui_policy_time_s",
+                    "type": "string"
+                },
+                {
+                    "name": "origin_scope_link_s",
+                    "type": "string"
+                },
+                {
+                    "name": "origin_scope_value_s",
+                    "type": "string"
+                },
+                {
+                    "name": "sys_created_on_s",
+                    "type": "string"
+                },
+                {
+                    "name": "sql_time_s",
+                    "type": "string"
+                },
+                {
+                    "name": "potential_cpu_time_s",
+                    "type": "string"
+                },
+                {
+                    "name": "sys_created_by_s",
+                    "type": "string"
+                },
+                {
+                    "name": "db_pool_s",
+                    "type": "string"
+                },
+                {
+                    "name": "session_wait_time_s",
+                    "type": "string"
+                },
+                {
+                    "name": "total_page_load_time_s",
+                    "type": "string"
+                },
+                {
+                    "name": "largest_input_read_s",
+                    "type": "string"
+                },
+                {
+                    "name": "clotho_time_s",
+                    "type": "string"
+                },
+                {
+                    "name": "cpu_usage_s",
+                    "type": "string"
+                },
+                {
+                    "name": "client_response_time_s",
+                    "type": "string"
+                },
+                {
+                    "name": "semaphore_wait_time_s",
+                    "type": "string"
+                },
+                {
+                    "name": "transaction_pattern_link_s",
+                    "type": "string"
+                },
+                {
+                    "name": "transaction_pattern_value_s",
+                    "type": "string"
+                },
+                {
+                    "name": "request_param_size_s",
+                    "type": "string"
+                },
+                {
+                    "name": "db_category_s",
+                    "type": "string"
+                },
+                {
+                    "name": "session_s",
+                    "type": "string"
+                },
+                {
+                    "name": "sys_id_g",
+                    "type": "guid"
+                },
+                {
+                    "name": "client_network_time_s",
+                    "type": "string"
+                },
+                {
+                    "name": "sql_count_s",
+                    "type": "string"
+                },
+                {
+                    "name": "client_transaction_s",
+                    "type": "string"
+                },
+                {
+                    "name": "start_process_at_s",
+                    "type": "string"
+                },
+                {
+                    "name": "table_s",
+                    "type": "string"
+                },
+                {
+                    "name": "user_agent_s",
+                    "type": "string"
+                },
+                {
+                    "name": "cpu_time_s",
+                    "type": "string"
+                },
+                {
+                    "name": "phase1_form_length_s",
+                    "type": "string"
+                },
+                {
+                    "name": "business_rule_time_s",
+                    "type": "string"
+                },
+                {
+                    "name": "system_id_s",
+                    "type": "string"
+                },
+                {
+                    "name": "view_id_s",
+                    "type": "string"
+                },
+                {
+                    "name": "client_script_time_s",
+                    "type": "string"
+                },
+                {
+                    "name": "network_time_s",
+                    "type": "string"
+                },
+                {
+                    "name": "total_wait_time_s",
+                    "type": "string"
+                },
+                {
+                    "name": "gzip_s",
+                    "type": "string"
+                },
+                {
+                    "name": "interaction_id_s",
+                    "type": "string"
+                },
+                {
+                    "name": "url_s",
+                    "type": "string"
+                },
+                {
+                    "name": "browser_time_s",
+                    "type": "string"
+                },
+                {
+                    "name": "largest_chunk_written_s",
+                    "type": "string"
+                },
+                {
+                    "name": "output_length_s",
+                    "type": "string"
+                },
+                {
+                    "name": "acl_time_s",
+                    "type": "string"
+                },
+                {
+                    "name": "ajax_transaction_count_s",
+                    "type": "string"
+                },
+                {
+                    "name": "render_size_s",
+                    "type": "string"
+                },
+                {
+                    "name": "transaction_number_s",
+                    "type": "string"
+                },
+                {
+                    "name": "has_call_chain_s",
+                    "type": "string"
+                },
+                {
+                    "name": "response_time_s",
+                    "type": "string"
+                },
+                {
+                    "name": "transaction_processing_time_s",
+                    "type": "string"
+                },
+                {
+                    "name": "app_scope_s",
+                    "type": "string"
+                },
+                {
+                    "name": "clotho_count_s",
+                    "type": "string"
+                }
+            ]
+        }
+    }
+}

@@ -1,0 +1,53 @@
+{
+    "properties": {
+        "schema": {
+            "name": "ServiceNow_syslog_CL",
+            "columns": [
+                {
+                    "name": "TimeGenerated",
+                    "type": "datetime"  
+                },
+                {
+                    "name": "sys_id_g",
+                    "type": "guid"
+                },
+                {
+                    "name": "source_application_family_s",
+                    "type": "string"
+                },
+                {
+                    "name": "Level",
+                    "type": "string"
+                },
+                {
+                    "name": "source_package_s",
+                    "type": "string"
+                },
+                {
+                    "name": "sys_created_on_s",
+                    "type": "string"
+                },
+                {
+                    "name": "source_s",
+                    "type": "string"
+                },
+                {
+                    "name": "Message",
+                    "type": "string"
+                },
+                {
+                    "name": "sys_class_name_s",
+                    "type": "string"
+                },
+                {
+                    "name": "sys_created_by_s",
+                    "type": "string"
+                },
+                {
+                    "name": "context_map_s",
+                    "type": "string"
+                }
+            ]
+        }
+    }
+}
