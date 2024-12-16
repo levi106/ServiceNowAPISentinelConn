@@ -1,0 +1,105 @@
+{
+    "properties": {
+        "schema": {
+            "name": "ServiceNow_sysevent_CL",
+            "columns": [
+                {
+                    "name": "TimeGenerated",
+                    "type": "datetime"  
+                },
+                {
+                    "name": "instance_s",
+                    "type": "string"
+                },
+                {
+                    "name": "process_on_s",
+                    "type": "string"
+                },
+                {
+                    "name": "user_name_s",
+                    "type": "string"
+                },
+                {
+                    "name": "sys_mod_count_s",
+                    "type": "string"
+                },
+                {
+                    "name": "sys_updated_on_s",
+                    "type": "string"
+                },
+                {
+                    "name": "uri_s",
+                    "type": "string"
+                },
+                {
+                    "name": "processed_s",
+                    "type": "string"
+                },
+                {
+                    "name": "rollback_context_id_s",
+                    "type": "string"
+                },
+                {
+                    "name": "sys_id_g",
+                    "type": "guid"
+                },
+                {
+                    "name": "sys_updated_by_s",
+                    "type": "string"
+                },
+                {
+                    "name": "user_id_g",
+                    "type": "guid"
+                },
+                {
+                    "name": "sys_created_on_s",
+                    "type": "string"
+                },
+                {
+                    "name": "processing_duration_s",
+                    "type": "string"
+                },
+                {
+                    "name": "name_s",
+                    "type": "string"
+                },
+                {
+                    "name": "descriptive_name_s",
+                    "type": "string"
+                },
+                {
+                    "name": "state_s",
+                    "type": "string"
+                },
+                {
+                    "name": "parm1_s",
+                    "type": "string"
+                },
+                {
+                    "name": "parm2_s",
+                    "type": "string"
+                },
+                {
+                    "name": "queue_s",
+                    "type": "string"
+                },
+                {
+                    "name": "sys_created_by_s",
+                    "type": "string"
+                },
+                {
+                    "name": "table_s",
+                    "type": "string"
+                },
+                {
+                    "name": "claimed_by_s",
+                    "type": "string"
+                },
+                {
+                    "name": "derived_priority_s",
+                    "type": "string"
+                }
+            ]
+        }
+    }
+}

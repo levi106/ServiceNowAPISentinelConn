@@ -264,6 +264,7 @@ def generate_date() -> Tuple[str, str]:
     past_time = state.get()
     if past_time is not None:
         logging.info("The last time point is: {}".format(past_time))
+        past_time = (datetime.datetime.fromtimestamp(int(past_time)) + datetime.timedelta(seconds=1)).strftime("%s")
     else:
         # 初回実行時はストレージ アカウントに情報が無いので 1 時間前からのデータを取得する
         logging.info("There is no last time point, trying to get events for last hour.")

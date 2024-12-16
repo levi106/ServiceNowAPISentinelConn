@@ -153,3 +153,4 @@ cython_debug/
 
 .DS_Store
 local.settings.json
+__azurite_*.json

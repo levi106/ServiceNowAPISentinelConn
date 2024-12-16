@@ -1,0 +1,28 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "dataCollectionEndpointsName": {
+            "type": "String",
+            "metadata": {
+                "description": "Specifies the name of the Data Collection Endpoints."
+            }
+        }
+    },
+    "variables": {},
+    "resources": [
+        {
+            "type": "Microsoft.Insights/dataCollectionEndpoints",
+            "apiVersion": "2022-06-01",
+            "name": "[parameters('dataCollectionEndpointsName')]",
+            "location": "japaneast",
+            "properties": {
+                "configurationAccess": {},
+                "logsIngestion": {},
+                "networkAcls": {
+                    "publicNetworkAccess": "Enabled"
+                }
+            }
+        }
+    ]
+}

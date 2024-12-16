@@ -1,0 +1,467 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "workspaceName": {
+            "type": "String",
+            "metadata": {
+                "description": "Specifies the name of the Log Analytics workspace."
+            }
+        }
+    },
+    "variables": {},
+    "resources": [
+        {
+            "type": "Microsoft.OperationalInsights/workspaces",
+            "apiVersion": "2021-12-01-preview",
+            "name": "[parameters('workspaceName')]",
+            "location": "japaneast",
+            "properties": {
+                "sku": {
+                    "name": "pergb2018"
+                },
+                "retentionInDays": 30,
+                "features": {
+                    "enableLogAccessUsingOnlyResourcePermissions": true
+                },
+                "workspaceCapping": {
+                    "dailyQuotaGb": -1
+                },
+                "publicNetworkAccessForIngestion": "Enabled",
+                "publicNetworkAccessForQuery": "Enabled"
+            }
+        },
+        {
+            "type": "Microsoft.OperationalInsights/workspaces/tables",
+            "apiVersion": "2021-12-01-preview",
+            "name": "[concat(parameters('workspaceName'), '/ServiceNow_sysevent_CL')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.OperationalInsights/workspaces', parameters('workspaceName'))]"
+            ],
+            "properties": {
+                "totalRetentionInDays": 30,
+                "plan": "Analytics",
+                "schema": {
+                    "name": "ServiceNow_sysevent_CL",
+                    "columns": [
+                        {
+                            "name": "TimeGenerated",
+                            "type": "datetime"
+                        },
+                        {
+                            "name": "instance_s",
+                            "type": "string"
+                        },
+                        {
+                            "name": "process_on_s",
+                            "type": "string"
+                        },
+                        {
+                            "name": "user_name_s",
+                            "type": "string"
+                        },
+                        {
+                            "name": "sys_mod_count_s",
+                            "type": "string"
+                        },
+                        {
+                            "name": "sys_updated_on_s",
+                            "type": "string"
+                        },
+                        {
+                            "name": "uri_s",
+                            "type": "string"
+                        },
+                        {
+                            "name": "processed_s",
+                            "type": "string"
+                        },
+                        {
+                            "name": "rollback_context_id_s",
+                            "type": "string"
+                        },
+                        {
+                            "name": "sys_id_g",
+                            "type": "guid"
+                        },
+                        {
+                            "name": "sys_updated_by_s",
+                            "type": "string"
+                        },
+                        {
+                            "name": "user_id_s",
+                            "type": "string"
+                        },
+                        {
+                            "name": "sys_created_on_s",
+                            "type": "string"
+                        },
+                        {
+                            "name": "processing_duration_s",
+                            "type": "string"
+                        },
+                        {
+                            "name": "name_s",
+                            "type": "string"
+                        },
+                        {
+                            "name": "descriptive_name_s",
+                            "type": "string"
+                        },
+                        {
+                            "name": "state_s",
+                            "type": "string"
+                        },
+                        {
+                            "name": "parm1_s",
+                            "type": "string"
+                        },
+                        {
+                            "name": "parm2_s",
+                            "type": "string"
+                        },
+                        {
+                            "name": "queue_s",
+                            "type": "string"
+                        },
+                        {
+                            "name": "sys_created_by_s",
+                            "type": "string"
+                        },
+                        {
+                            "name": "table_s",
+                            "type": "string"
+                        },
+                        {
+                            "name": "claimed_by_s",
+                            "type": "string"
+                        },
+                        {
+                            "name": "derived_priority_s",
+                            "type": "string"
+                        }
+                    ]
+                },
+                "retentionInDays": 30
+            }
+        },
+        {
+            "type": "Microsoft.OperationalInsights/workspaces/tables",
+            "apiVersion": "2021-12-01-preview",
+            "name": "[concat(parameters('workspaceName'), '/ServiceNow_syslog_CL')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.OperationalInsights/workspaces', parameters('workspaceName'))]"
+            ],
+            "properties": {
+                "totalRetentionInDays": 30,
+                "plan": "Analytics",
+                "schema": {
+                    "name": "ServiceNow_syslog_CL",
+                    "columns": [
+                        {
+                            "name": "TimeGenerated",
+                            "type": "datetime"
+                        },
+                        {
+                            "name": "sys_id_g",
+                            "type": "guid"
+                        },
+                        {
+                            "name": "source_application_family_s",
+                            "type": "string"
+                        },
+                        {
+                            "name": "Level",
+                            "type": "string"
+                        },
+                        {
+                            "name": "source_package_s",
+                            "type": "string"
+                        },
+                        {
+                            "name": "sys_created_on_s",
+                            "type": "string"
+                        },
+                        {
+                            "name": "source_s",
+                            "type": "string"
+                        },
+                        {
+                            "name": "Message",
+                            "type": "string"
+                        },
+                        {
+                            "name": "sys_class_name_s",
+                            "type": "string"
+                        },
+                        {
+                            "name": "sys_created_by_s",
+                            "type": "string"
+                        },
+                        {
+                            "name": "context_map_s",
+                            "type": "string"
+                        },
+                        {
+                            "name": "sequence_s",
+                            "type": "string"
+                        }
+                    ]
+                },
+                "retentionInDays": 30
+            }
+        },
+        {
+            "type": "Microsoft.OperationalInsights/workspaces/tables",
+            "apiVersion": "2021-12-01-preview",
+            "name": "[concat(parameters('workspaceName'), '/ServiceNow_syslog_transaction_CL')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.OperationalInsights/workspaces', parameters('workspaceName'))]"
+            ],
+            "properties": {
+                "totalRetentionInDays": 30,
+                "plan": "Analytics",
+                "schema": {
+                    "name": "ServiceNow_syslog_transaction_CL",
+                    "columns": [
+                        {
+                            "name": "TimeGenerated",
+                            "type": "datetime"
+                        },
+                        {
+                            "name": "business_rule_count_s",
+                            "type": "string"
+                        },
+                        {
+                            "name": "type_s",
+                            "type": "string"
+                        },
+                        {
+                            "name": "protocol_s",
+                            "type": "string"
+                        },
+                        {
+                            "name": "remote_ip_s",
+                            "type": "string"
+                        },
+                        {
+                            "name": "ui_policy_time_s",
+                            "type": "string"
+                        },
+                        {
+                            "name": "origin_scope_link_s",
+                            "type": "string"
+                        },
+                        {
+                            "name": "origin_scope_value_s",
+                            "type": "string"
+                        },
+                        {
+                            "name": "sys_created_on_s",
+                            "type": "string"
+                        },
+                        {
+                            "name": "sql_time_s",
+                            "type": "string"
+                        },
+                        {
+                            "name": "potential_cpu_time_s",
+                            "type": "string"
+                        },
+                        {
+                            "name": "sys_created_by_s",
+                            "type": "string"
+                        },
+                        {
+                            "name": "db_pool_s",
+                            "type": "string"
+                        },
+                        {
+                            "name": "session_wait_time_s",
+                            "type": "string"
+                        },
+                        {
+                            "name": "total_page_load_time_s",
+                            "type": "string"
+                        },
+                        {
+                            "name": "largest_input_read_s",
+                            "type": "string"
+                        },
+                        {
+                            "name": "clotho_time_s",
+                            "type": "string"
+                        },
+                        {
+                            "name": "cpu_usage_s",
+                            "type": "string"
+                        },
+                        {
+                            "name": "client_response_time_s",
+                            "type": "string"
+                        },
+                        {
+                            "name": "semaphore_wait_time_s",
+                            "type": "string"
+                        },
+                        {
+                            "name": "transaction_pattern_link_s",
+                            "type": "string"
+                        },
+                        {
+                            "name": "transaction_pattern_value_s",
+                            "type": "string"
+                        },
+                        {
+                            "name": "request_param_size_s",
+                            "type": "string"
+                        },
+                        {
+                            "name": "db_category_s",
+                            "type": "string"
+                        },
+                        {
+                            "name": "session_s",
+                            "type": "string"
+                        },
+                        {
+                            "name": "sys_id_g",
+                            "type": "guid"
+                        },
+                        {
+                            "name": "client_network_time_s",
+                            "type": "string"
+                        },
+                        {
+                            "name": "sql_count_s",
+                            "type": "string"
+                        },
+                        {
+                            "name": "client_transaction_s",
+                            "type": "string"
+                        },
+                        {
+                            "name": "start_process_at_s",
+                            "type": "string"
+                        },
+                        {
+                            "name": "table_s",
+                            "type": "string"
+                        },
+                        {
+                            "name": "user_agent_s",
+                            "type": "string"
+                        },
+                        {
+                            "name": "cpu_time_s",
+                            "type": "string"
+                        },
+                        {
+                            "name": "phase1_form_length_s",
+                            "type": "string"
+                        },
+                        {
+                            "name": "business_rule_time_s",
+                            "type": "string"
+                        },
+                        {
+                            "name": "system_id_s",
+                            "type": "string"
+                        },
+                        {
+                            "name": "view_id_s",
+                            "type": "string"
+                        },
+                        {
+                            "name": "client_script_time_s",
+                            "type": "string"
+                        },
+                        {
+                            "name": "network_time_s",
+                            "type": "string"
+                        },
+                        {
+                            "name": "total_wait_time_s",
+                            "type": "string"
+                        },
+                        {
+                            "name": "gzip_s",
+                            "type": "string"
+                        },
+                        {
+                            "name": "interaction_id_s",
+                            "type": "string"
+                        },
+                        {
+                            "name": "url_s",
+                            "type": "string"
+                        },
+                        {
+                            "name": "browser_time_s",
+                            "type": "string"
+                        },
+                        {
+                            "name": "largest_chunk_written_s",
+                            "type": "string"
+                        },
+                        {
+                            "name": "output_length_s",
+                            "type": "string"
+                        },
+                        {
+                            "name": "acl_time_s",
+                            "type": "string"
+                        },
+                        {
+                            "name": "ajax_transaction_count_s",
+                            "type": "string"
+                        },
+                        {
+                            "name": "render_size_s",
+                            "type": "string"
+                        },
+                        {
+                            "name": "transaction_number_s",
+                            "type": "string"
+                        },
+                        {
+                            "name": "has_call_chain_s",
+                            "type": "string"
+                        },
+                        {
+                            "name": "response_time_s",
+                            "type": "string"
+                        },
+                        {
+                            "name": "transaction_processing_time_s",
+                            "type": "string"
+                        },
+                        {
+                            "name": "app_scope_s",
+                            "type": "string"
+                        },
+                        {
+                            "name": "clotho_count_s",
+                            "type": "string"
+                        },
+                        {
+                            "name": "additional_info_s",
+                            "type": "string"
+                        },
+                        {
+                            "name": "additional_debug_info_s",
+                            "type": "string"
+                        }
+                    ]
+                },
+                "retentionInDays": 30
+            }
+        }
+    ],
+    "outputs": {
+        "laId": {
+            "type": "String",
+            "value": "[resourceId('Microsoft.OperationalInsights/workspaces', parameters('workspaceName'))]"
+        }
+    }
+}
