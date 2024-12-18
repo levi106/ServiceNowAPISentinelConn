@@ -77,7 +77,11 @@ client_id = os.getenv('ServiceNowClientID')
 client_secret = os.getenv('ServiceNowClientSecret')
 # 認証 URL
 # basic, jwt, password, refresh_token で使用
-authentication_url = os.environ['ServiceNowAuthenticationUrl']
+authentication_url = os.getenv('ServiceNowAuthenticationUrl', '')
+# 取得対象のテーブル
+table_name = os.environ['ServiceNowTableName']
+# ログのサイズが大きい場合に分割するパーティション数
+number_of_partitions = int(os.getenv('NumberOfPartitions', '5'))
 
 def process_events(client: LogsIngestionClient, table_name: str, events_obj: List[Any]) -> None:
     # ServiceNow から取得したデータを加工して Log Analytics へ送信したい場合は、ここで変換を行う
@@ -206,12 +210,20 @@ def get_result_request(client: LogsIngestionClient, table_name: str, params: Any
                                   },
                          params=params)
         if r.status_code == 200:
+            Max_Data_Size = 1024 * 1024; # 1MB
             if "result" in r.json():
                 result = r.json()["result"]
                 count = len(result)
                 if count > 0:
-                    logging.info("Processing {} events".format(count))
-                    process_events(client, table_name, result)
+                    s = len(r.text)
+                    if s > Max_Data_Size:
+                        m = (count + number_of_partitions - 1) // number_of_partitions
+                        for i in range(0, number_of_partitions):
+                            logging.info("Processing {}/{}  (total {} events, total size: {})".format(i, number_of_partitions, count, s))
+                            process_events(client, table_name, result[i * m: (i + 1) *m])
+                    else:
+                        logging.info("Processing {} events".format(count))
+                        process_events(client, table_name, result)
             else:
                 logging.info("There are no entries from the output.")
         elif r.status_code == 401:
@@ -264,14 +276,14 @@ def generate_date() -> Tuple[str, str]:
     past_time = state.get()
     if past_time is not None:
         logging.info("The last time point is: {}".format(past_time))
-        past_time = (datetime.datetime.fromtimestamp(int(past_time)) + datetime.timedelta(seconds=1)).strftime("%s")
+        past_time = int((datetime.datetime.fromtimestamp(int(past_time)) + datetime.timedelta(seconds=1)).timestamp())
     else:
         # 初回実行時はストレージ アカウントに情報が無いので 1 時間前からのデータを取得する
         logging.info("There is no last time point, trying to get events for last hour.")
-        past_time = (current_time - datetime.timedelta(minutes=60)).strftime("%s")
+        past_time = int((current_time - datetime.timedelta(minutes=60)).timestamp())
     # 現在時刻でストレージ アカウント上の状態を更新
-    state.post(current_time.strftime("%s"))
-    return (past_time, current_time.strftime("%s"))
+    state.post(str(int(current_time.timestamp())))
+    return (past_time, int(current_time.timestamp()))
 
 
 def main(mytimer: func.TimerRequest)  -> None:
@@ -286,6 +298,4 @@ def main(mytimer: func.TimerRequest)  -> None:
     credential = DefaultAzureCredential()
     client = LogsIngestionClient(endpoint=dce_endpoint, credential=credential, logging_enable=True)
 
-    # 取得する ServiceNow のテーブルが 3 つあるので、それぞれのテーブルに対して処理
-    for table_name in ["sysevent", "syslog", "syslog_transaction"]:
-        process_table(client, table_name, oldest, latest)
+    process_table(client, table_name, oldest, latest)
