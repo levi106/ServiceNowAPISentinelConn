@@ -80,8 +80,6 @@ client_secret = os.getenv('ServiceNowClientSecret')
 authentication_url = os.getenv('ServiceNowAuthenticationUrl', '')
 # 取得対象のテーブル
 table_name = os.environ['ServiceNowTableName']
-# ログのサイズが大きい場合に分割するパーティション数
-number_of_partitions = int(os.getenv('NumberOfPartitions', '5'))
 
 def process_events(client: LogsIngestionClient, table_name: str, events_obj: List[Any]) -> None:
     # ServiceNow から取得したデータを加工して Log Analytics へ送信したい場合は、ここで変換を行う
@@ -217,6 +215,7 @@ def get_result_request(client: LogsIngestionClient, table_name: str, params: Any
                 if count > 0:
                     s = len(r.text)
                     if s > Max_Data_Size:
+                        number_of_partitions = int(s / Max_Data_Size) + 1
                         m = (count + number_of_partitions - 1) // number_of_partitions
                         for i in range(0, number_of_partitions):
                             logging.info("Processing {}/{}  (total {} events, total size: {})".format(i, number_of_partitions, count, s))
